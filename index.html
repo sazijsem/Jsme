@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Moje Pocity a Potřeby</title>
+<!-- Knihovna pro převod HTML karty na obrázek (Screenshot) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --primary: #6366f1;
+    --accent-need: #059669;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 12px;
+    display: flex;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .app-container {
+    width: 100%;
+    max-width: 440px;
+    background: var(--card);
+    border-radius: 28px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    padding: 20px 16px;
+    box-sizing: border-box;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .header h1 { font-size: 1.3rem; margin: 0; color: var(--text); }
+  .header p { font-size: 0.85rem; color: var(--text-muted); margin: 4px 0 0 0; }
+
+  .section-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 22px 0 10px 0;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .category-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin: 10px 0 6px 0;
+    width: 100%;
+  }
+
+  .tags-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tag-btn {
+    background: #f8fafc;
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+    text-align: center;
+  }
+
+  .tag-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+
+  .tag-btn.unknown {
+    background: #fff7ed;
+    border-color: #ffedd5;
+    color: #c2410c;
+  }
+  .tag-btn.unknown.active {
+    background: #ea580c;
+    color: white;
+  }
+
+  .need-btn {
+    background: #ecfdf5;
+    border: 1.5px solid #a7f3d0;
+    color: #047857;
+    border-radius: 16px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+    text-align: center;
+  }
+
+  .need-btn.active {
+    background: var(--accent-need);
+    color: white;
+    border-color: var(--accent-need);
+  }
+
+  .sub-tags-wrapper {
+    width: 100%;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    padding: 8px;
+    background: #f1f5f9;
+    border-radius: 14px;
+    border: 1px dashed var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .sub-tag-btn {
+    font-size: 0.78rem;
+    padding: 5px 10px;
+    border-radius: 10px;
+    background: white;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    color: #475569;
+  }
+
+  .sub-tag-btn.active {
+    background: #4338ca;
+    color: white;
+    border-color: #4338ca;
+  }
+
+  .need-phrase {
+    font-size: 0.8rem;
+    color: #047857;
+    font-style: italic;
+    background: #e6f4ea;
+    padding: 6px 10px;
+    border-radius: 8px;
+    margin-top: 4px;
+    width: 100%;
+  }
+
+  .custom-input {
+    width: 100%;
+    height: 38px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 0 10px;
+    font-family: inherit;
+    box-sizing: border-box;
+    font-size: 0.85rem;
+    margin-top: 8px;
+    outline: none;
+    background: #fafafa;
+  }
+  .custom-input:focus { border-color: var(--primary); background: #fff; }
+
+  /* Baterka Slidery */
+  .battery-box {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 12px;
+    border: 1px solid var(--border);
+  }
+
+  .battery-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    gap: 8px;
+  }
+  .battery-item:last-child { margin-bottom: 0; }
+
+  .battery-input-label {
+    width: 120px;
+    border: 1px solid transparent;
+    background: transparent;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    padding: 4px;
+    border-radius: 6px;
+  }
+  .battery-input-label:focus {
+    border-color: var(--border);
+    background: white;
+  }
+
+  .battery-slider { 
+    flex-grow: 1; 
+    height: 6px; 
+    cursor: pointer;
+  }
+  
+  .battery-val { 
+    font-weight: bold; 
+    width: 45px; 
+    text-align: right; 
+    font-size: 0.85rem; 
+    padding: 2px 6px;
+    border-radius: 6px;
+    color: white;
+  }
+
+  textarea {
+    width: 100%;
+    height: 70px;
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 12px;
+    font-family: inherit;
+    box-sizing: border-box;
+    resize: none;
+    font-size: 0.88rem;
+    outline: none;
+  }
+  textarea:focus { border-color: var(--primary); }
+
+  .primary-btn {
+    width: 100%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 18px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 20px;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  }
+
+  .secondary-btn {
+    width: 100%;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1.5px solid var(--border);
+    padding: 12px;
+    border-radius: 14px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .voice-btn {
+    background: #f1f5f9;
+    border: 1px solid var(--border);
+    width: 100%;
+    padding: 12px;
+    border-radius: 14px;
+    margin-top: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #475569;
+    font-weight: 500;
+  }
+
+  /* Souhrn styling */
+  .summary-card {
+    background: #ecfdf5;
+    border: 2px solid #a7f3d0;
+    border-radius: 20px;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+  
+  .summary-title-input {
+    background: transparent;
+    border: none;
+    border-bottom: 2px dashed #059669;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #065f46;
+    width: 100%;
+    margin-bottom: 12px;
+    padding: 2px 0;
+    outline: none;
+  }
+
+  .summary-section-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #047857;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 12px;
+    margin-bottom: 6px;
+  }
+
+  .summary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .summary-item-chip {
+    background: #ffffff;
+    border: 1px solid #a7f3d0;
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    color: #064e3b;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .summary-bat-row {
+    margin: 8px 0;
+  }
+  .summary-bat-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #064e3b;
+    margin-bottom: 3px;
+  }
+  .summary-bat-bar-bg {
+    width: 100%;
+    height: 10px;
+    background: #d1fae5;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .summary-bat-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.3s ease;
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- KROK 1: VÝBĚR (FORMULÁŘ) -->
+  <div id="step-form">
+    <div class="header">
+      <h1>Jak se cítíš?</h1>
+      <p>Zastav se a pojmenuj své emoce a potřeby.</p>
+    </div>
+
+    <div class="section-title">💭 1. Co právě cítíš? (vyber i více)</div>
+    <div class="tags-grid">
+      <button class="tag-btn" onclick="toggleCategory(this, 'hnev')">😤 Hněv / Vztek</button>
+      <button class="tag-btn" onclick="toggleCategory(this, 'smutek')">😢 Smutek</button>
+      <button class="tag-btn" onclick="toggleCategory(this, 'uzkost')">😰 Úzkost / Strach</button>
+      <button class="tag-btn" onclick="toggleCategory(this, 'unava')">😴 Přehlcení / Únava</button>
+      <button class="tag-btn" onclick="toggleCategory(this, 'bezmoc')">😶 Bezmoc / Stah</button>
+      <button class="tag-btn" onclick="toggleCategory(this, 'radost')">😊 Radost / Klid</button>
+      <button class="tag-btn unknown" onclick="toggleUnknown(this)">❓ Nevím / Nejsem si jistá</button>
+
+      <div id="sub-hnev" class="sub-tags-wrapper hidden">
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '😠 Frustrace')">Frustrace</button>
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '⚡ Podráždění')">Podráždění</button>
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '🤢 Znechucení')">Znechucení</button>
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '💔 Křivda / Uražení')">Křivda / Uražení</button>
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '🔥 Vzteklost')">Vzteklost</button>
+      </div>
+      
+      <div id="sub-smutek" class="sub-tags-wrapper hidden">
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '🥀 Osamělost')">Osamělost</button>
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '🌧️ Zklamání')">Zklamání</button>
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '🕳️ Beznaděj')">Beznaděj</button>
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '💧 Lítost')">Lítost</button>
+      </div>
+
+      <div id="sub-uzkost" class="sub-tags-wrapper hidden">
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '😟 Obavy / Strach')">Obavy / Strach</button>
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '❓ Nejistota')">Nejistota</button>
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '💥 Tlak / Napětí')">Tlak / Napětí</button>
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '🚨 Panika')">Panika</button>
+      </div>
+
+      <div id="sub-unava" class="sub-tags-wrapper hidden">
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '🔋 Vyčerpání')">Vyčerpání</button>
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '🌫️ Apatie')">Apatie</button>
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '🤯 Přehlcení podněty')">Přehlcení podněty</button>
+      </div>
+
+      <div id="sub-bezmoc" class="sub-tags-wrapper hidden">
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '🌀 Zmatení')">Zmatení</button>
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '🛑 Zaseknutí')">Zaseknutí</button>
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '🌊 Ztráta kontroly')">Ztráta kontroly</button>
+      </div>
+
+      <div id="sub-radost" class="sub-tags-wrapper hidden">
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '😮‍💨 Úleva')">Úleva</button>
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '🙏 Vděčnost')">Vděčnost</button>
+        <button class="sub-tag-btn" onclick="toggleSubTag(this, '🕊️ Klid / Mír')">Klid / Mír</button>
+      </div>
+    </div>
+    <input type="text" id="custom-emotions" class="custom-input" placeholder="✏️ Jiný pocit? Napiš ho sem...">
+
+    <div class="section-title">🌱 2. Co teď nejvíce potřebuji? (NVC)</div>
+    
+    <div class="category-label">Vztahy & Blízkost:</div>
+    <div class="tags-grid">
+      <button class="need-btn" onclick="toggleNeed(this, '🫂 Blízkost / Objetí', 'sub-blizkost')">🫂 Blízkost / Objetí</button>
+      <button class="need-btn" onclick="toggleNeed(this, '👂 Vyslechnout bez rad', 'sub-vyslechnout')">👂 Vyslechnout bez rad</button>
+      <button class="need-btn" onclick="toggleNeed(this, '💚 Uznání a pochopení', 'sub-uznani')">💚 Uznání a pochopení</button>
+      <button class="need-btn" onclick="toggleNeed(this, '🤝 Pomoc / Podpora', 'sub-pomoc')">🤝 Pomoc / Podpora</button>
+      
+      <div id="sub-blizkost" class="need-phrase hidden">💭 „Potřebuji cítit, že je někdo blízko mě a můžu se opřít.“</div>
+      <div id="sub-vyslechnout" class="need-phrase hidden">💭 „Potřebuji jen tvou pozornost bez snahy problém hned řešit.“</div>
+      <div id="sub-uznani" class="need-phrase hidden">💭 „Potřebuji slyšet, že to, co prožívám, dává smysl.“</div>
+      <div id="sub-pomoc" class="need-phrase hidden">💭 „Potřebuji fyzicky s něčím pomoct nebo ulehčit.“</div>
+    </div>
+
+    <div class="category-label">Autonomie & Prostor:</div>
+    <div class="tags-grid">
+      <button class="need-btn" onclick="toggleNeed(this, '🧘‍♀️ Být sama / Ticho', 'sub-sama')">🧘‍♀️ Být sama / Ticho</button>
+      <button class="need-btn" onclick="toggleNeed(this, '🛑 Prostor pro sebe', 'sub-prostor')">🛑 Prostor pro sebe</button>
+      <button class="need-btn" onclick="toggleNeed(this, '🕊️ Svoboda / Nestíhat', 'sub-svoboda')">🕊️ Svoboda / Nestíhat</button>
+
+      <div id="sub-sama" class="need-phrase hidden">💭 „Potřebuji na chvíli vypnout v tichu bez dalších podnětů.“</div>
+      <div id="sub-prostor" class="need-phrase hidden">💭 „Potřebuji netlačit na pilu a mít vlastní tempo.“</div>
+      <div id="sub-svoboda" class="need-phrase hidden">💭 „Potřebuji nemít povinnosti a nic nemuset dělat.“</div>
+    </div>
+
+    <div class="category-label">Tělo & Bezpečí:</div>
+    <div class="tags-grid">
+      <button class="need-btn" onclick="toggleNeed(this, '🍕 Jídlo / Pití')">🍕 Jídlo / Pití</button>
+      <button class="need-btn" onclick="toggleNeed(this, '🛌 Odpočinek / Spánek')">🛌 Odpočinek / Spánek</button>
+      <button class="need-btn" onclick="toggleNeed(this, '🏃‍♀️ Pohyb / Vybití')">🏃‍♀️ Pohyb / Vybití</button>
+      <button class="need-btn" onclick="toggleNeed(this, '🛡️ Bezpečí / Jistota')">🛡️ Bezpečí / Jistota</button>
+    </div>
+    <input type="text" id="custom-needs" class="custom-input" placeholder="✏️ Jiná potřeba? Napiš ji sem...">
+
+    <div class="section-title">🔋 3. Sociální baterka</div>
+    <div class="battery-box">
+      
+      <div class="battery-item">
+        <span class="battery-input-label">🌐 Na všechny</span>
+        <input type="range" class="battery-slider" id="bat-slider-0" min="0" max="100" value="0" oninput="updateBat('bat-val-0', this.value)">
+        <span class="battery-val" id="bat-val-0">0 %</span>
+      </div>
+
+      <div class="battery-item">
+        <input type="text" class="battery-input-label" id="bat-name-1" placeholder="Doplň komu..." value="❤️ Ty">
+        <input type="range" class="battery-slider" id="bat-slider-1" min="0" max="100" value="0" oninput="updateBat('bat-val-1', this.value)">
+        <span class="battery-val" id="bat-val-1">0 %</span>
+      </div>
+
+      <div class="battery-item">
+        <input type="text" class="battery-input-label" id="bat-name-2" placeholder="Doplň komu..." value="">
+        <input type="range" class="battery-slider" id="bat-slider-2" min="0" max="100" value="0" oninput="updateBat('bat-val-2', this.value)">
+        <span class="battery-val" id="bat-val-2">0 %</span>
+      </div>
+
+      <div class="battery-item">
+        <input type="text" class="battery-input-label" id="bat-name-3" placeholder="Doplň komu..." value="">
+        <input type="range" class="battery-slider" id="bat-slider-3" min="0" max="100" value="0" oninput="updateBat('bat-val-3', this.value)">
+        <span class="battery-val" id="bat-val-3">0 %</span>
+      </div>
+
+    </div>
+
+    <div class="section-title">✍️ 4. Poznámka nebo hlasovka</div>
+    <textarea id="note" placeholder="Co se přesně stalo? Nebo vzkaz..."></textarea>
+    <button class="voice-btn" onclick="alert('🎙️ Nahrávání spustí mikrofon v telefonu.')">🎙️ Nahrát rychlou hlasovku</button>
+
+    <button class="primary-btn" onclick="generateSummary()">Vygenerovat souhrn</button>
+  </div>
+
+  <!-- KROK 2: SAMOSTATNÝ SOUHRN -->
+  <div id="step-summary" class="hidden">
+    <button class="secondary-btn" onclick="goBackToForm()">⬅️ Zpět k úpravám</button>
+    
+    <!-- Karta souhrnu určená k vyfocení/sdílení -->
+    <div id="summary-card-export" class="summary-card">
+      <input type="text" class="summary-title-input" value="📋 Můj stav (klikni pro úpravu nadpisu)">
+      
+      <div class="summary-section-label">💭 POCITY</div>
+      <div id="sum-emotions-list" class="summary-list"></div>
+
+      <div class="summary-section-label">🌱 POTŘEBY</div>
+      <div id="sum-needs-list" class="summary-list"></div>
+
+      <div id="summary-bat-section">
+        <div class="summary-section-label">🔋 SOCIÁLNÍ BATERKA</div>
+        <div id="summary-batteries"></div>
+      </div>
+
+      <div id="summary-note-section">
+        <div class="summary-section-label">✍️ SLOVA / POZNÁMKA</div>
+        <div class="summary-item-chip" style="font-style: italic; background:#ffffff;">
+          <span id="sum-note">-</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="primary-btn" style="background:#047857; margin-top:16px;" onclick="shareSummaryAsImage()">📤 Poslat / Sdílet jako obrázek</button>
+    <button class="secondary-btn" style="margin-top:10px;" onclick="goBackToForm()">⬅️ Zpět k úpravám</button>
+  </div>
+
+</div>
+
+<script>
+  let selectedEmotions = new Set();
+  let selectedNeeds = new Set();
+  let touchedSliders = new Set();
+
+  function toggleCategory(btn, id) {
+    btn.classList.toggle('active');
+    const label = btn.innerText.trim();
+    if (btn.classList.contains('active')) {
+      selectedEmotions.add(label);
+    } else {
+      selectedEmotions.delete(label);
+    }
+    const subDiv = document.getElementById('sub-' + id);
+    if (subDiv) subDiv.classList.toggle('hidden');
+  }
+
+  function toggleSubTag(btn, name) {
+    btn.classList.toggle('active');
+    if (btn.classList.contains('active')) selectedEmotions.add(name);
+    else selectedEmotions.delete(name);
+  }
+
+  function toggleUnknown(btn) {
+    btn.classList.toggle('active');
+    const label = "❓ Nevím přesně";
+    if (btn.classList.contains('active')) selectedEmotions.add(label);
+    else selectedEmotions.delete(label);
+  }
+
+  function toggleNeed(btn, name, subId) {
+    btn.classList.toggle('active');
+    if (btn.classList.contains('active')) {
+      selectedNeeds.add(name);
+    } else {
+      selectedNeeds.delete(name);
+    }
+    if (subId) {
+      const phraseDiv = document.getElementById(subId);
+      if (phraseDiv) phraseDiv.classList.toggle('hidden');
+    }
+  }
+
+  function getColorForPercentage(pct) {
+    if (pct < 25) return '#ef4444';
+    if (pct < 50) return '#f97316';
+    if (pct < 75) return '#eab308';
+    return '#10b981';
+  }
+
+  function updateBat(valId, val) {
+    const el = document.getElementById(valId);
+    el.innerText = val + ' %';
+    const color = getColorForPercentage(val);
+    el.style.backgroundColor = color;
+    
+    // Zaznamenáme, že uživatel se sliderem manipuloval
+    const index = valId.split('-')[2];
+    touchedSliders.add(parseInt(index));
+  }
+
+  document.querySelectorAll('.battery-slider').forEach((slider, index) => {
+    updateBat('bat-val-' + index, slider.value);
+  });
+  // Na začátku vymažeme indikaci dotyku, aby se nula defaultně nesnímala jako aktivní akce u volných polí
+  touchedSliders.clear();
+
+  function generateSummary() {
+    // 1. Zpracování emocí
+    const emoList = document.getElementById('sum-emotions-list');
+    emoList.innerHTML = '';
+    const emotionsArray = Array.from(selectedEmotions);
+    const customEmo = document.getElementById('custom-emotions').value.trim();
+    if (customEmo) emotionsArray.push(`✏️ ${customEmo}`);
+
+    if (emotionsArray.length === 0) {
+      emoList.innerHTML = '<div class="summary-item-chip" style="color:#94a3b8;">Neuvedeno</div>';
+    } else {
+      emotionsArray.forEach(emo => {
+        const item = document.createElement('div');
+        item.className = 'summary-item-chip';
+        item.innerText = emo;
+        emoList.appendChild(item);
+      });
+    }
+
+    // 2. Zpracování potřeb
+    const needsList = document.getElementById('sum-needs-list');
+    needsList.innerHTML = '';
+    const needsArray = Array.from(selectedNeeds);
+    const customNeed = document.getElementById('custom-needs').value.trim();
+    if (customNeed) needsArray.push(`✏️ ${customNeed}`);
+
+    if (needsArray.length === 0) {
+      needsList.innerHTML = '<div class="summary-item-chip" style="color:#94a3b8;">Neuvedeno</div>';
+    } else {
+      needsArray.forEach(need => {
+        const item = document.createElement('div');
+        item.className = 'summary-item-chip';
+        item.innerText = need;
+        needsList.appendChild(item);
+      });
+    }
+
+    // 3. Zpracování baterií
+    const batContainer = document.getElementById('summary-batteries');
+    batContainer.innerHTML = '';
+
+    for (let i = 0; i < 4; i++) {
+      let name = "";
+      if (i === 0) name = "🌐 Na všechny";
+      else name = document.getElementById(`bat-name-${i}`).value.trim();
+
+      const valText = document.getElementById(`bat-val-${i}`).innerText;
+      const numVal = parseInt(valText);
+
+      const isTouched = touchedSliders.has(i);
+      
+      if (i === 0 || (name !== "" && (isTouched || numVal > 0))) {
+        const color = getColorForPercentage(numVal);
+        const row = document.createElement('div');
+        row.className = 'summary-bat-row';
+        row.innerHTML = `
+          <div class="summary-bat-header">
+            <span>${name}</span>
+            <span>${valText}</span>
+          </div>
+          <div class="summary-bat-bar-bg">
+            <div class="summary-bat-bar-fill" style="width: ${numVal}%; background-color: ${color};"></div>
+          </div>
+        `;
+        batContainer.appendChild(row);
+      }
+    }
+
+    // 4. Poznámka
+    let noteText = document.getElementById('note').value.trim();
+    document.getElementById('sum-note').innerText = noteText ? `"${noteText}"` : 'Bez poznámky';
+
+    // Přepnutí na krokovou obrazovku Souhrnu
+    document.getElementById('step-form').classList.add('hidden');
+    document.getElementById('step-summary').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function goBackToForm() {
+    // Přepnutí zpět na krokovou obrazovku Formuláře
+    document.getElementById('step-summary').classList.add('hidden');
+    document.getElementById('step-form').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Funkce pro sdílení karty jako obrázku (Screenshot)
+  async function shareSummaryAsImage() {
+    const cardElement = document.getElementById('summary-card-export');
+    
+    try {
+      const canvas = await html2canvas(cardElement, {
+        scale: 2, // Vyšší kvalita obrázku
+        backgroundColor: '#ffffff',
+        borderRadius: 20
+      });
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          alert('Chyba při vytváření obrázku.');
+          return;
+        }
+        
+        const file = new File([blob], 'muj-stav.png', { type: 'image/png' });
+
+        // Kontrola, zda zařízení (iPhone/Android) podporuje sdílení souborů
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: 'Můj stav',
+              text: 'Ahoj, posílám souhrn toho, jak se teď cítím a co potřebuji.'
+            });
+          } catch (err) {
+            if (err.name !== 'AbortError') {
+              alert('Sdílení se nepodařilo dokončit.');
+            }
+          }
+        } else {
+          // Nabídne stažení obrázku, pokud mobilní prohlížeč neumožní přímo spustit systémové sdílení
+          const link = document.createElement('a');
+          link.download = 'muj-stav.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        }
+      }, 'image/png');
+
+    } catch (e) {
+      alert('Vytvoření obrázku selhalo: ' + e.message);
+    }
+  }
+</script>
+
+</body>
+</html>
